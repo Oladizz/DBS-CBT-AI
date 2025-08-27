@@ -1,0 +1,6 @@
+{
+  "name": "DE-BARMS SCHOOL AI CBT",
+  "description": "A Computer-Based Testing (CBT) platform for DE-BARMS SCHOOL. Teachers can create tests, leveraging AI to generate questions. Students can take tests and view their results instantly.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
