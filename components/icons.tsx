@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export const BookOpenIcon = ({ className = 'w-6 h-6' }: { className?: string }) => (
@@ -153,5 +152,11 @@ export const ChatBubbleLeftRightIcon = ({ className = 'w-6 h-6' }: { className?:
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.722.28c-.428.032-.85.176-1.227.38a6.035 6.035 0 01-3.05 1.218c-.877.278-1.795.421-2.734.421-1.136 0-2.239-.23-3.227-.654C5.08 18.52 4.5 17.654 4.5 16.714V12.428c0-.97.616-1.814 1.5-2.097L9.75 9.19a6.035 6.035 0 013.05-1.218C13.674 7.79 14.592 7.65 15.53 7.65c.675 0 1.33.095 1.95.28l3.722.28z" />
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9.19l.563.04c.428.032.85.176 1.227.38a6.035 6.035 0 003.05 1.218C9.59 11.01 10.508 11.15 11.45 11.15c.675 0 1.33.095 1.95.28l.563.04M3.75 9.19A2.25 2.25 0 002.25 11.44v2.828c0 .97.616 1.814 1.5 2.097l.563.04a6.035 6.035 0 003.05 1.218C8.59 18.01 9.508 18.15 10.45 18.15c.675 0 1.33.095 1.95.28l.563.04" />
+    </svg>
+);
+
+export const DocumentDownloadIcon = ({ className = 'w-6 h-6' }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
     </svg>
 );

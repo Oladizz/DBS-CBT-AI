@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type, Chat } from "@google/genai";
 import { Question, QuestionResult, Submission, Test, QuestionType, Student, LessonPlan } from '../types';
 
@@ -158,7 +157,8 @@ export const generateExplanation = async (question: Question, userAnswerIndex: n
     }
 };
 
-export const analyzeTestResults = async (test: Test, submissions: Submission[]): Promise<{ summary: string; struggledTopics: string[] }> => {
+// FIX: Update function signature to accept a 'subject' property on the test object.
+export const analyzeTestResults = async (test: Test & { subject: string }, submissions: Submission[]): Promise<{ summary: string; struggledTopics: string[] }> => {
     if (submissions.length === 0) {
         return { summary: "No submissions yet. Analysis is not available.", struggledTopics: [] };
     }
@@ -292,7 +292,8 @@ export const parseTestFromPdf = async (pdfBase64: string): Promise<Omit<Test, 'i
     }
 };
 
-export const generateStudentReportSummary = async (student: Student, submissions: Submission[], tests: Test[]): Promise<string> => {
+// FIX: Update function signature to accept a 'subject' property on each test object.
+export const generateStudentReportSummary = async (student: Student, submissions: Submission[], tests: (Test & { subject: string })[]): Promise<string> => {
     try {
         const performanceData = submissions.map(sub => {
             const test = tests.find(t => t.id === sub.testId);

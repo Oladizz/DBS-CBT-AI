@@ -3,6 +3,8 @@ export enum Role {
   NONE,
   TEACHER,
   STUDENT,
+  IMAGE_TO_PDF,
+  PROPRIETOR,
 }
 
 export type QuestionType = 'multiple-choice' | 'short-answer';
@@ -20,18 +22,42 @@ export interface Question {
   explanation?: string; 
 }
 
+export interface SchoolClass {
+  id: string;
+  name: string; // e.g., "JSS 1A", "Primary 5B"
+}
+
+export interface Session {
+    id: string;
+    name: string; // e.g., "2024/2025"
+    terms: string[]; // e.g., ["First Term", "Second Term", "Third Term"]
+    isArchived: boolean;
+}
+
+export interface Subject {
+    id: string;
+    name: string; // e.g., "Mathematics", "History"
+}
+
 export interface Test {
   id:string;
   title: string;
-  subject: string;
+  subjectId: string; // Foreign key to Subject
   durationMinutes: number;
   questions: Question[];
+  classId: string; // Foreign key to SchoolClass
+  sessionId: string; // Foreign key to Session
+  term: string; // e.g., "First Term"
 }
 
 // Stored student data
 export interface Student {
     id: string; // Unique 6-digit ID for login
     name: string;
+    classId: string; // Foreign key to SchoolClass
+    parentName?: string;
+    parentPhone?: string;
+    admissionDate?: string;
 }
 
 // Student's answers before submission

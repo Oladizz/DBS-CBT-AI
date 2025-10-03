@@ -1,10 +1,5 @@
 import React from 'react';
-
-export interface NavItem {
-  key: string;
-  label: string;
-  icon: React.ReactNode;
-}
+import { NavItem } from './SideNav'; // Reuse NavItem type
 
 interface FooterNavProps {
   navItems: NavItem[];
