@@ -52,7 +52,8 @@ const StudentReportCardView: React.FC<StudentReportCardViewProps> = ({ student, 
         ? studentSubmissions.reduce((acc, sub) => acc + sub.score, 0) / studentSubmissions.length
         : 0;
     
-    const performanceBySubject = studentSubmissions.reduce<Record<string, { scores: number[], count: number }>>((acc, sub) => {
+    // FIX: Explicitly type the initial value for the reduce accumulator to ensure correct type inference.
+    const performanceBySubject = studentSubmissions.reduce((acc, sub) => {
         const test = tests.find(t => t.id === sub.testId);
         const subject = test ? getSubjectName(test.subjectId) : 'Uncategorized';
         if (!acc[subject]) {
@@ -61,7 +62,7 @@ const StudentReportCardView: React.FC<StudentReportCardViewProps> = ({ student, 
         acc[subject].scores.push(sub.score);
         acc[subject].count++;
         return acc;
-    }, {});
+    }, {} as Record<string, { scores: number[], count: number }>);
 
     const subjectAverages = Object.entries(performanceBySubject).map(([subject, data]) => ({
         name: subject,
@@ -71,7 +72,8 @@ const StudentReportCardView: React.FC<StudentReportCardViewProps> = ({ student, 
     const bestSubject = subjectAverages.length > 0 ? { name: subjectAverages[0].name, score: subjectAverages[0].average } : null;
     const areaForFocus = subjectAverages.length > 1 && subjectAverages[subjectAverages.length - 1].average < 70 ? { name: subjectAverages[subjectAverages.length - 1].name, score: subjectAverages[subjectAverages.length - 1].average } : null;
 
-    const submissionsByTerm = studentSubmissions.reduce<Record<string, Submission[]>>((acc, sub) => {
+    // FIX: Explicitly type the initial value for the reduce accumulator to ensure correct type inference.
+    const submissionsByTerm = studentSubmissions.reduce((acc, sub) => {
         const test = tests.find(t => t.id === sub.testId);
         if(test) {
             const key = `${test.sessionId}-${test.term}`;
@@ -79,7 +81,7 @@ const StudentReportCardView: React.FC<StudentReportCardViewProps> = ({ student, 
             acc[key].push(sub);
         }
         return acc;
-    }, {});
+    }, {} as Record<string, Submission[]>);
 
 
     const handlePrint = () => {
