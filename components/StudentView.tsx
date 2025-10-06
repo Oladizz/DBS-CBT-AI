@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { Test, Submission, StudentAnswer, Student } from '../types';
-import { useSchool } from '../../contexts/SchoolContext';
+import { useSchool } from '../contexts/SchoolContext';
 import Card from './common/Card';
 import { AcademicCapIcon, BookOpenIcon, ClockIcon, CheckCircleIcon, PlayIcon, HomeIcon, ClipboardListIcon } from './icons';
 // FIX: NavItem is not exported from FooterNav. It is defined in and should be imported from SideNav.

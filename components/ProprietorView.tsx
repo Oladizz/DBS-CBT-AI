@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Test, Submission, Student } from '../types';
-import { useSchool } from '../../contexts/SchoolContext';
+import { useSchool } from '../contexts/SchoolContext';
 import Card from './common/Card';
 import Button from './common/Button';
 import ManageStudents from './management/ManageStudents';
