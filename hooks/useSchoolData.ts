@@ -1,48 +1,46 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useDatabase, useDatabaseObjectData } from 'reactfire';
-import { ref, set, push, update } from 'firebase/database';
+import { useFirestore, useFirestoreCollectionData } from 'reactfire';
+import { collection, doc, addDoc, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { Test, Submission, StudentAnswer, QuestionResult, Student, SchoolClass, Session, Subject } from '../types';
 import { gradeShortAnswer } from '../services/geminiService';
 
-// This type helps us handle the fact that Firebase stores Dates as ISO strings
-type FirebaseSubmission = Omit<Submission, 'id' | 'submittedAt'> & {
-  submittedAt: string;
+// This type helps us handle the fact that Firestore stores Dates as Timestamps
+type FirestoreSubmission = Omit<Submission, 'submittedAt'> & {
+  submittedAt: Timestamp;
 };
 
 export const useSchoolData = () => {
-  const db = useDatabase();
+  const firestore = useFirestore();
 
-  // Define database references
-  const testsRef = ref(db, 'tests');
-  const submissionsRef = ref(db, 'submissions');
-  const studentsRef = ref(db, 'students');
-  const classesRef = ref(db, 'classes');
-  const sessionsRef = ref(db, 'sessions');
-  const subjectsRef = ref(db, 'subjects');
+  // Define collection references
+  const testsCollection = collection(firestore, 'tests');
+  const submissionsCollection = collection(firestore, 'submissions');
+  const studentsCollection = collection(firestore, 'students');
+  const classesCollection = collection(firestore, 'classes');
+  const sessionsCollection = collection(firestore, 'sessions');
+  const subjectsCollection = collection(firestore, 'subjects');
 
-  // Fetch data from Firebase
-  const { data: testsData } = useDatabaseObjectData<{ [key: string]: Test }>(testsRef);
-  const { data: submissionsData } = useDatabaseObjectData<{ [key: string]: FirebaseSubmission }>(submissionsRef);
-  const { data: studentsData } = useDatabaseObjectData<{ [key: string]: Student }>(studentsRef);
-  const { data: classesData } = useDatabaseObjectData<{ [key: string]: SchoolClass }>(classesRef);
-  const { data: sessionsData } = useDatabaseObjectData<{ [key: string]: Session }>(sessionsRef);
-  const { data: subjectsData } = useDatabaseObjectData<{ [key: string]: Subject }>(subjectsRef);
+  // Fetch data from Firestore collections, specifying the ID field
+  const { data: tests } = useFirestoreCollectionData<Test>(testsCollection, { idField: 'id' });
+  const { data: submissionsData } = useFirestoreCollectionData<FirestoreSubmission>(submissionsCollection, { idField: 'id' });
+  const { data: students } = useFirestoreCollectionData<Student>(studentsCollection, { idField: 'id' });
+  const { data: classes } = useFirestoreCollectionData<SchoolClass>(classesCollection, { idField: 'id' });
+  const { data: sessions } = useFirestoreCollectionData<Session>(sessionsCollection, { idField: 'id' });
+  const { data: subjects } = useFirestoreCollectionData<Subject>(subjectsCollection, { idField: 'id' });
 
-  // Transform Firebase object data into arrays for the UI, using useMemo for performance
-  const tests = useMemo(() => (testsData ? Object.entries(testsData).map(([id, data]) => ({ ...data, id })) : []), [testsData]);
-  const submissions = useMemo(() => (submissionsData ? Object.entries(submissionsData).map(([id, data]) => ({ ...data, id, submittedAt: new Date(data.submittedAt) })) : []), [submissionsData]);
-  const students = useMemo(() => (studentsData ? Object.entries(studentsData).map(([id, data]) => ({ ...data, id })) : []), [studentsData]);
-  const classes = useMemo(() => (classesData ? Object.entries(classesData).map(([id, data]) => ({ ...data, id })) : []), [classesData]);
-  const sessions = useMemo(() => (sessionsData ? Object.entries(sessionsData).map(([id, data]) => ({ ...data, id })) : []), [sessionsData]);
-  const subjects = useMemo(() => (subjectsData ? Object.entries(subjectsData).map(([id, data]) => ({ ...data, id })) : []), [subjectsData]);
+  // Convert submission timestamps to Date objects for use in the app
+  const submissions: Submission[] = useMemo(() => (submissionsData || []).map(sub => ({
+    ...sub,
+    submittedAt: sub.submittedAt.toDate(),
+  })), [submissionsData]);
 
   // Active session and term are local UI state
   const [activeSessionId, _setActiveSessionId] = useState<string>('');
   const [activeTerm, setActiveTerm] = useState<string>('');
 
-  // Effect to set the initial active session once data is loaded from Firebase
+  // Effect to set the initial active session once data is loaded
   useEffect(() => {
-    if (sessions.length > 0 && !activeSessionId) {
+    if (sessions && sessions.length > 0 && !activeSessionId) {
       const initialActiveSession = sessions.find(s => !s.isArchived);
       if (initialActiveSession) {
         _setActiveSessionId(initialActiveSession.id);
@@ -52,62 +50,57 @@ export const useSchoolData = () => {
   }, [sessions, activeSessionId]);
 
   // Helper functions to get names from IDs
-  const getSubjectName = (subjectId: string): string => subjects.find(s => s.id === subjectId)?.name || 'Unknown Subject';
-  const getSessionName = (sessionId: string): string => sessions.find(s => s.id === sessionId)?.name || 'Unknown Session';
+  const getSubjectName = (subjectId: string): string => subjects?.find(s => s.id === subjectId)?.name || 'Unknown Subject';
+  const getSessionName = (sessionId: string): string => sessions?.find(s => s.id === sessionId)?.name || 'Unknown Session';
 
   const setActiveSessionId = (sessionId: string) => {
     _setActiveSessionId(sessionId);
-    const newSession = sessions.find(s => s.id === sessionId);
+    const newSession = sessions?.find(s => s.id === sessionId);
     setActiveTerm(newSession?.terms?.[0] || '');
   };
 
   // --- Data Mutation Functions ---
 
-  const handleCreateClass = (name: string) => {
-    const newClassRef = push(classesRef);
-    set(newClassRef, { name });
+  const handleCreateClass = async (name: string) => {
+    await addDoc(classesCollection, { name });
   };
 
-  const handleAddStudent = (studentData: Omit<Student, 'id'>) => {
-    // Preserve original 6-digit random ID logic
+  const handleAddStudent = async (studentData: Omit<Student, 'id'>) => {
     const newId = String(Math.floor(100000 + Math.random() * 900000));
-    const newStudentRef = ref(db, `students/${newId}`);
-    set(newStudentRef, studentData);
+    const studentDocRef = doc(firestore, 'students', newId);
+    await setDoc(studentDocRef, studentData);
   };
 
-  const handleCreateTest = (newTest: Omit<Test, 'id' | 'sessionId' | 'term'>) => {
-    const newTestRef = push(testsRef);
+  const handleCreateTest = async (newTest: Omit<Test, 'id' | 'sessionId' | 'term'>) => {
     const testData = {
       ...newTest,
       sessionId: activeSessionId,
       term: activeTerm,
     };
-    set(newTestRef, testData);
+    await addDoc(testsCollection, testData);
   };
 
-  const handleUpdateTest = (updatedTest: Test) => {
+  const handleUpdateTest = async (updatedTest: Test) => {
     const { id, ...testData } = updatedTest;
-    const testRef = ref(db, `tests/${id}`);
-    update(testRef, testData);
+    const testDocRef = doc(firestore, 'tests', id);
+    await updateDoc(testDocRef, testData);
   };
 
-  const handleCreateSession = (name: string, terms: string[]) => {
-    const newSessionRef = push(sessionsRef);
-    set(newSessionRef, { name, terms, isArchived: false });
+  const handleCreateSession = async (name: string, terms: string[]) => {
+    await addDoc(sessionsCollection, { name, terms, isArchived: false });
   };
 
-  const handleArchiveSession = (sessionId: string) => {
-    const sessionRef = ref(db, `sessions/${sessionId}`);
-    update(sessionRef, { isArchived: true });
+  const handleArchiveSession = async (sessionId: string) => {
+    const sessionDocRef = doc(firestore, 'sessions', sessionId);
+    await updateDoc(sessionDocRef, { isArchived: true });
   };
 
-  const handleCreateSubject = (name: string) => {
-    const newSubjectRef = push(subjectsRef);
-    set(newSubjectRef, { name });
+  const handleCreateSubject = async (name: string) => {
+    await addDoc(subjectsCollection, { name });
   };
 
   const handleTestSubmit = async (testId: string, answers: StudentAnswer, currentStudent: Student): Promise<Submission | undefined> => {
-    const test = tests.find(t => t.id === testId);
+    const test = tests?.find(t => t.id === testId);
     if (!test || !currentStudent) return undefined;
 
     const detailedResults: QuestionResult[] = [];
@@ -129,7 +122,6 @@ export const useSchoolData = () => {
     }
 
     const score = (detailedResults.filter(r => r.isCorrect).length / test.questions.length) * 100;
-    const newSubmissionRef = push(submissionsRef);
 
     const submissionData = {
       studentId: currentStudent.id,
@@ -137,26 +129,25 @@ export const useSchoolData = () => {
       answers,
       detailedResults,
       score,
-      submittedAt: new Date().toISOString(), // Store as ISO string
+      submittedAt: Timestamp.fromDate(new Date()),
     };
 
-    await set(newSubmissionRef, submissionData);
+    const docRef = await addDoc(submissionsCollection, submissionData);
 
-    // Return a complete Submission object for immediate use in the UI
     return {
       ...submissionData,
-      id: newSubmissionRef.key!,
-      submittedAt: new Date(submissionData.submittedAt),
+      id: docRef.id,
+      submittedAt: submissionData.submittedAt.toDate(),
     };
   };
 
   return {
-    tests,
-    submissions,
-    students,
-    classes,
-    sessions,
-    subjects,
+    tests: tests || [],
+    submissions: submissions || [],
+    students: students || [],
+    classes: classes || [],
+    sessions: sessions || [],
+    subjects: subjects || [],
     activeSessionId,
     activeTerm,
     getSubjectName,

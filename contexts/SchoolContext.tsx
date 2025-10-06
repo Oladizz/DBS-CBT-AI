@@ -1,5 +1,5 @@
 import React, { createContext, useContext, Suspense } from 'react';
-import { FirebaseAppProvider, DatabaseProvider } from 'reactfire';
+import { FirebaseAppProvider, FirestoreProvider } from 'reactfire';
 import { app, db } from '../services/firebase';
 import { Test, Submission, Student, SchoolClass, StudentAnswer, Session, Subject } from '../types';
 import { useSchoolData } from '../hooks/useSchoolData';
@@ -29,25 +29,21 @@ interface SchoolContextType {
 
 const SchoolContext = createContext<SchoolContextType | null>(null);
 
-// This is the component that will be rendered while Firebase data is loading.
 const LoadingFallback = () => <div>Loading...</div>;
 
-// The inner component that uses the hooks, now that Firebase is guaranteed to be available.
 const SchoolDataConsumer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const schoolData = useSchoolData();
     return <SchoolContext.Provider value={schoolData}>{children}</SchoolContext.Provider>;
 };
 
-// The main provider component, now wrapped with Firebase providers.
 export const SchoolDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
         <FirebaseAppProvider firebaseApp={app}>
-            <DatabaseProvider sdk={db}>
-                {/* Suspense is needed because reactfire hooks suspend while loading data */}
+            <FirestoreProvider sdk={db}>
                 <Suspense fallback={<LoadingFallback />}>
                     <SchoolDataConsumer>{children}</SchoolDataConsumer>
                 </Suspense>
-            </DatabaseProvider>
+            </FirestoreProvider>
         </FirebaseAppProvider>
     );
 };

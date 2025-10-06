@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Role, Student } from './types';
-import { SchoolDataProvider, useSchool } from './contexts/SchoolContext';
+import { useSchool } from './contexts/SchoolContext';
 import LoginScreen from './components/auth/LoginScreen';
 import TeacherView from './components/TeacherView';
 import StudentView from './components/StudentView';
@@ -9,7 +8,7 @@ import ProprietorView from './components/ProprietorView';
 import ImageToPdfConverter from './components/ImageToPdfConverter';
 import StudentReportCard from './components/reports/StudentReportCard';
 
-const AppContent: React.FC = () => {
+function App() {
   const [role, setRole] = useState<Role>(Role.NONE);
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
   const [printingStudent, setPrintingStudent] = useState<Student | null>(null);
@@ -29,14 +28,14 @@ const AppContent: React.FC = () => {
     setRole(Role.NONE);
     setCurrentStudent(null);
   };
-  
+
   if (printingStudent) {
     return (
         <div className="container mx-auto max-w-7xl">
-            <StudentReportCard 
-                student={printingStudent} 
-                onBack={() => setPrintingStudent(null)} 
-                isPrintView={true} 
+            <StudentReportCard
+                student={printingStudent}
+                onBack={() => setPrintingStudent(null)}
+                isPrintView={true}
             />
         </div>
     );
@@ -60,15 +59,6 @@ const AppContent: React.FC = () => {
       {role === Role.IMAGE_TO_PDF && <ImageToPdfConverter onExit={handleExitRole} />}
     </div>
   );
-}
-
-
-function App() {
-  return (
-    <SchoolDataProvider>
-      <AppContent />
-    </SchoolDataProvider>
-  )
 }
 
 export default App;
